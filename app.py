@@ -33,6 +33,7 @@ SAMPLE_LABELS = {
     "Silver Creek Vodka — title-case warning": "title_case_warning.png",
     "Copper Ridge Rye — ABV mismatch": "wrong_abv.png",
     "Harbor Light Rum — missing warning": "missing_warning.png",
+    "Golden Gate Brandy — reworded warning": "altered_warning.png",
 }
 
 # ---------------------------------------------------------------------------
@@ -130,6 +131,17 @@ st.markdown(
       .pill-pass{color:var(--green);background:var(--green-bg)} .pill-fail{color:var(--red);background:var(--red-bg)}
       .pill-review{color:var(--amber);background:var(--amber-bg)}
 
+      /* government-warning word diff */
+      .gw-diff { background:#fbf9f4; border:1px dashed var(--line); border-radius:6px;
+        padding:.6rem .8rem; margin:.15rem 0 .1rem; font-size:.9rem; line-height:1.75; }
+      .gw-diff .gw-row { margin:.15rem 0; }
+      .gw-diff .lbl { display:inline-block; font-weight:800; font-size:.64rem; letter-spacing:.09em;
+        text-transform:uppercase; color:var(--muted); margin-right:.45rem; min-width:5.4rem; }
+      .diff-miss { background:var(--green-bg); color:var(--green); font-weight:700;
+        padding:0 .18rem; border-radius:3px; }
+      .diff-extra { background:var(--red-bg); color:var(--red); font-weight:700;
+        padding:0 .18rem; border-radius:3px; text-decoration:line-through; }
+
       /* buttons */
       .stButton>button, .stDownloadButton>button { border-radius:6px; font-weight:700;
         border:1px solid var(--navy); color:var(--navy); background:#fff; transition:all .12s ease; }
@@ -212,7 +224,7 @@ if API_KEY:
     st.caption(f"🟢 Live AI reading enabled · model **{MODEL}**")
 else:
     st.warning(
-        "**Demo mode** — no `ANTHROPIC_API_KEY` configured. The five bundled sample "
+        "**Demo mode** — no `ANTHROPIC_API_KEY` configured. The bundled sample "
         "labels work fully (offline canned readings); add an API key to analyse your "
         "own uploads with the live vision model.",
         icon="🔌",
@@ -263,6 +275,41 @@ def render_verdict(report: VerificationReport) -> None:
     st.caption(f"Analysed in **{report.elapsed_seconds:.1f}s**{latency_flag}{demo_flag}")
 
 
+def _warning_diff_html(expected: str, found: str) -> str:
+    """Side-by-side word-level diff of the mandated warning vs the label's.
+
+    Words the label is missing/changed are highlighted on the "Mandated" line;
+    words the label wrongly added/changed are struck through on the "On label"
+    line. Comparison is case-insensitive (capitalisation issues are reported
+    separately by the engine).
+    """
+    from difflib import SequenceMatcher
+
+    e_words, f_words = expected.split(), found.split()
+    sm = SequenceMatcher(None, [w.lower() for w in e_words], [w.lower() for w in f_words])
+
+    exp_parts: list[str] = []
+    fnd_parts: list[str] = []
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        exp_chunk = " ".join(_esc(w) for w in e_words[i1:i2])
+        fnd_chunk = " ".join(_esc(w) for w in f_words[j1:j2])
+        if tag == "equal":
+            exp_parts.append(exp_chunk)
+            fnd_parts.append(fnd_chunk)
+        else:  # replace / delete / insert
+            if exp_chunk:
+                exp_parts.append(f'<span class="diff-miss">{exp_chunk}</span>')
+            if fnd_chunk:
+                fnd_parts.append(f'<span class="diff-extra">{fnd_chunk}</span>')
+
+    return (
+        '<div class="gw-diff">'
+        f'<div class="gw-row"><span class="lbl">Mandated</span>{" ".join(exp_parts)}</div>'
+        f'<div class="gw-row"><span class="lbl">On label</span>{" ".join(fnd_parts)}</div>'
+        "</div>"
+    )
+
+
 def render_fields(report: VerificationReport) -> None:
     for r in report.field_results:
         pill = _STATUS_PILL.get(r.status, "")
@@ -272,6 +319,19 @@ def render_fields(report: VerificationReport) -> None:
         if r.found and r.field != "Government Warning":
             meta_bits.append(f"On label: <b>{_esc(r.found)}</b>")
         meta = "<div class='fc-meta'>" + " &nbsp;·&nbsp; ".join(meta_bits) + "</div>" if meta_bits else ""
+
+        # For a failed Government Warning with wording drift, show a word-level
+        # diff so the agent sees exactly what changed — not just that it did.
+        diff = ""
+        if (
+            r.field == "Government Warning"
+            and r.status == Status.FAIL
+            and r.expected
+            and r.found
+            and r.expected.lower().split() != r.found.lower().split()
+        ):
+            diff = _warning_diff_html(r.expected, r.found)
+
         # Single-line HTML on purpose: a blank line inside the block (e.g. when
         # `meta` is empty) would terminate the HTML block and make Streamlit's
         # Markdown parser render the rest as a literal code block.
@@ -280,6 +340,7 @@ def render_fields(report: VerificationReport) -> None:
             f'<div class="fc-head">{pill}<span class="fc-title">{_esc(r.field)}</span></div>'
             f"{meta}"
             f'<div class="fc-detail">{_esc(r.detail)}</div>'
+            f"{diff}"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -467,7 +528,7 @@ with tab_batch:
 
     b1, b2 = st.columns([1, 1])
     with b1:
-        if st.button("▶  Run the 5 bundled samples", width="stretch"):
+        if st.button(f"▶  Run the {len(SAMPLE_LABELS)} bundled samples", width="stretch"):
             items = [
                 BatchItem(
                     name=fn,
@@ -483,7 +544,7 @@ with tab_batch:
             "⬇  Download the sample batch (zip)",
             data=_build_sample_zip(),
             file_name="sample_batch.zip",
-            help="CSV + the 5 label images, so you can test the 'bring your own' flow.",
+            help="CSV + the sample label images, so you can test the 'bring your own' flow.",
             width="stretch",
         )
 

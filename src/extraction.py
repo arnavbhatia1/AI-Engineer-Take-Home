@@ -15,6 +15,7 @@ import base64
 from typing import Optional, Protocol
 
 from .config import DEFAULT_MODEL, MAX_TOKENS
+from .imaging import prepare_image
 from .models import LabelExtraction
 
 _SYSTEM_PROMPT = (
@@ -80,6 +81,9 @@ class ClaudeProvider:
         self.name = model
 
     def extract(self, image_bytes: bytes, media_type: str, hint: Optional[str] = None) -> LabelExtraction:
+        # Downscale oversized uploads: faster (5s target), cheaper, and keeps
+        # big phone photos under the API's image size limit.
+        image_bytes, media_type = prepare_image(image_bytes, media_type)
         b64 = base64.standard_b64encode(image_bytes).decode("utf-8")
         message = self._client.messages.create(
             model=self.model,
@@ -175,6 +179,19 @@ MOCK_EXTRACTIONS: dict[str, LabelExtraction] = {
         country_of_origin=None,
         government_warning_text=None,
         government_warning_heading_uppercase=None,
+        legibility_notes=None,
+    ),
+    "altered_warning.png": LabelExtraction(
+        brand_name="GOLDEN GATE BRANDY",
+        class_type="California Brandy",
+        alcohol_content="40% Alc./Vol. (80 Proof)",
+        net_contents="750 mL",
+        producer_name_address="Distilled by Golden Gate Cellars, San Francisco, CA",
+        country_of_origin=None,
+        government_warning_text=_GOOD_WARNING.replace(
+            "because of the risk of birth defects", "because of the risk of harm to the baby"
+        ).replace("may cause health problems", "can cause health issues"),
+        government_warning_heading_uppercase=True,
         legibility_notes=None,
     ),
 }

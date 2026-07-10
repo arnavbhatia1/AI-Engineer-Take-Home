@@ -32,7 +32,7 @@ NEEDS REVIEW**, otherwise **APPROVED**.
 
 ## Try it in 30 seconds
 
-The app ships with **five sample labels** that exercise every path. In **demo
+The app ships with **six sample labels** that exercise every path. In **demo
 mode** (no API key needed) they work fully offline:
 
 | Sample | What's special | Expected verdict |
@@ -42,9 +42,10 @@ mode** (no API key needed) they work fully offline:
 | Silver Creek Vodka | Warning heading is title-case `Government Warning:` | ❌ REJECTED |
 | Copper Ridge Rye | Label shows 40% but application says 45% | ❌ REJECTED |
 | Harbor Light Rum | No Government Warning at all | ❌ REJECTED |
+| Golden Gate Brandy | Warning creatively reworded — shows a **word-level diff** of exactly what changed | ❌ REJECTED |
 
 Open the deployed app → **Single label** tab → pick a sample → **Verify**.
-Or the **Batch** tab → **Run the 5 bundled samples**.
+Or the **Batch** tab → **Run the 6 bundled samples**.
 
 ---
 
@@ -66,7 +67,7 @@ streamlit run app.py
 
 The app opens at `http://localhost:8501`.
 
-- **No API key?** It runs in **demo mode** — the five bundled samples work
+- **No API key?** It runs in **demo mode** — the six bundled samples work
   fully; your own uploads show a "demo mode" note.
 - **With an API key** (in `.env`, your shell, or `.streamlit/secrets.toml`)
   it reads any label you upload with the live vision model.
@@ -111,7 +112,7 @@ encrypted secrets and is never in the repo.
 
 > **Cost note:** each label reading is one small vision API call (a few cents
 > at most). If you'd rather not attach a key, the deployed app still fully
-> demonstrates the pass/fail logic on the five bundled samples in demo mode.
+> demonstrates the pass/fail logic on the six bundled samples in demo mode.
 
 <details>
 <summary>Alternative: Hugging Face Spaces</summary>
@@ -152,7 +153,7 @@ Why split it this way:
   imperfect artwork (glare, skew, odd fonts) and returning it *verbatim*. It is
   explicitly told **not** to normalise or "fix" anything.
 - **The pass/fail judgment lives in plain Python** — so the rules are
-  deterministic, auditable, and unit-tested (25 tests, no network). The
+  deterministic, auditable, and unit-tested (30 tests, no network). The
   Government-Warning check in particular is a real compliance rule, not a vibe:
   it enforces exact wording and the all-caps heading in code, and shows a
   word-level diff when the wording drifts.
@@ -164,10 +165,19 @@ Why split it this way:
 **Speed.** Extraction is a single API round-trip that returns a small
 structured record via a forced tool call — no extended thinking, minimal output
 — to stay under the **5-second** target the stakeholders called out as
-make-or-break. The measured time is shown on every result. The model is
-configurable (`LABEL_MODEL`); the default is the most capable Opus tier, and a
-faster tier (`claude-sonnet-5` / `claude-haiku-4-5`) trades a little accuracy
-for lower latency if needed.
+make-or-break. Oversized uploads (e.g. raw phone photos) are **downscaled
+client-side** before the call (`src/imaging.py`): past ~1568px the model gains
+nothing, so larger images only add upload time and tokens — and anything over
+the API's 5 MB image cap would fail outright. The measured time is shown on
+every result. The model is configurable (`LABEL_MODEL`); the default is the
+most capable Opus tier, and a faster tier (`claude-sonnet-5` /
+`claude-haiku-4-5`) trades a little accuracy for lower latency if needed.
+
+**Explainability.** When the Government Warning wording drifts from the
+mandate, the result shows a **word-level diff** — mandated text vs. label text
+with the missing words highlighted and the substituted words struck through —
+so the agent sees exactly *what* to cite in the rejection, not just that it
+failed.
 
 **Batch.** Peak-season importers submit hundreds at once (Janet's ask). Batch
 mode fans the work across a small thread pool and streams live progress, then
@@ -219,7 +229,7 @@ Called out honestly, since the brief asks for them:
   (`BATCH_MAX_WORKERS`, default 6) to stay safely under limits. A true
   300-at-once peak-season run would use the Message Batches API or a queue;
   that's noted as the next step, not built here.
-- **Demo mode is sample-only.** With no API key, only the five bundled labels
+- **Demo mode is sample-only.** With no API key, only the six bundled labels
   have canned readings (used for the offline demo and the tests). Real uploads
   need a key.
 - **No storage / PII handling.** Per Marcus, nothing sensitive is stored — the
@@ -238,13 +248,14 @@ Called out honestly, since the brief asks for them:
 │   ├── config.py              # TTB constants, thresholds, model selection
 │   ├── models.py              # ApplicationData, LabelExtraction, report types
 │   ├── extraction.py          # vision providers: Claude + offline demo/mock
+│   ├── imaging.py             # client-side downscale (5s target + API size cap)
 │   ├── verification.py        # the compliance engine (read-vs-decide lives here)
 │   └── batch.py               # concurrent batch runner
 ├── samples/
-│   ├── generate_samples.py    # renders the 5 sample labels with Pillow
+│   ├── generate_samples.py    # renders the 6 sample labels with Pillow
 │   ├── applications.csv        # matching application data
-│   └── *.png                   # the 5 committed sample images
-├── tests/                     # 25 unit + end-to-end (mock) tests, no network
+│   └── *.png                   # the 6 committed sample images
+├── tests/                     # 30 unit + end-to-end (mock) tests, no network
 ├── docs/ASSIGNMENT.md         # the original take-home brief, preserved
 ├── requirements.txt
 └── .streamlit/                # theme + secrets template

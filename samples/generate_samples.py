@@ -3,12 +3,13 @@
 Run this once (locally) to (re)create the PNGs in this folder. The committed
 PNGs are what the deployed app serves, so it needs no fonts at runtime.
 
-The five labels deliberately cover every verification path:
+The six labels deliberately cover every verification path:
   1. old_tom_bourbon.png   -> clean, everything matches            -> APPROVED
   2. stones_throw_gin.png   -> "STONE'S THROW" vs app "Stone's Throw" -> APPROVED (fuzzy)
   3. title_case_warning.png -> "Government Warning:" not all-caps    -> REJECTED
   4. wrong_abv.png          -> label 40% vs application 45%          -> REJECTED
   5. missing_warning.png    -> no government warning at all          -> REJECTED
+  6. altered_warning.png    -> warning wording creatively reworded   -> REJECTED (word diff)
 
 Usage:  python samples/generate_samples.py
 """
@@ -162,6 +163,20 @@ def main():
         net="750 mL",
         producer="Bottled by Harbor Light Rum Co., Key West, FL",
         warning=None,
+    )
+    # "People try to get creative with the warning all the time" — reworded,
+    # heading still in caps, so only the wording check should fail.
+    altered = GOOD_WARNING.replace(
+        "because of the risk of birth defects", "because of the risk of harm to the baby"
+    ).replace("may cause health problems", "can cause health issues")
+    render(
+        os.path.join(HERE, "altered_warning.png"),
+        brand="GOLDEN GATE BRANDY",
+        class_type="California Brandy",
+        abv="40% Alc./Vol. (80 Proof)",
+        net="750 mL",
+        producer="Distilled by Golden Gate Cellars, San Francisco, CA",
+        warning=altered,
     )
 
 

@@ -31,6 +31,7 @@ Streamlit Community Cloud.
 - `src/verification.py` — the compliance engine. Deterministic, unit-tested
   field matchers + the strict Government-Warning check. All pass/fail logic lives
   here, never in the model prompt.
+- `src/imaging.py` — client-side downscale of oversized uploads (latency + the API's 5MB image cap).
 - `src/models.py` — `ApplicationData`, `LabelExtraction` (Pydantic), report types.
 - `src/config.py` — TTB constants (canonical warning text), thresholds, model.
 - `src/batch.py` — concurrent batch runner.

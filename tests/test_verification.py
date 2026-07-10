@@ -198,6 +198,21 @@ class TestEndToEndWithMock(unittest.TestCase):
         report = self._verify("missing_warning.png", app)
         self.assertEqual(report.overall, OverallStatus.REJECTED)
 
+    def test_altered_warning_rejected_with_wording_detail(self):
+        # Reworded warning (heading still in caps): only the wording check trips.
+        app = ApplicationData(
+            brand_name="Golden Gate Brandy",
+            class_type="California Brandy",
+            alcohol_content="40% Alc./Vol. (80 Proof)",
+            net_contents="750 mL",
+        )
+        report = self._verify("altered_warning.png", app)
+        self.assertEqual(report.overall, OverallStatus.REJECTED)
+        gw = next(r for r in report.field_results if r.field == "Government Warning")
+        self.assertEqual(gw.status, Status.FAIL)
+        self.assertIn("wording", gw.detail.lower())
+        self.assertNotIn("capital", gw.detail.lower())  # caps were fine here
+
 
 if __name__ == "__main__":
     unittest.main()
