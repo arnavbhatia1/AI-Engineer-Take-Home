@@ -81,8 +81,10 @@ Pure-logic tests, no network or key required:
 python -m unittest discover -s tests -v
 ```
 
-The same suite, plus a headless boot-and-batch smoke test of the app itself,
-runs in CI on every push and pull request (`.github/workflows/ci.yml`).
+The suite includes an integration test that runs the full bundled-samples
+batch end to end. CI (`.github/workflows/ci.yml`) runs it all on every push
+and pull request, then boots a real Streamlit server and confirms it comes up
+healthy, the same way Streamlit Community Cloud runs the app.
 
 ### Regenerate the sample labels
 
@@ -146,7 +148,7 @@ Why this split matters:
   imperfect artwork (glare, skew, odd fonts) and returning it verbatim.
 - **The compliance rules stay deterministic and auditable.** The
   Government Warning check enforces the exact wording and the all-caps
-  heading in code (30 tests, no network needed), and produces a word-level
+  heading in code (32 tests, no network needed), and produces a word-level
   diff when the wording drifts.
 - **Fuzzy where it should be, strict where it must be.** Brand and type
   matching tolerates case and punctuation and escalates close calls to a
@@ -242,8 +244,8 @@ finding, and sample data one click away.
 │   ├── generate_samples.py     # renders the 6 sample labels with Pillow
 │   ├── applications.csv        # matching application data
 │   └── *.png                   # the 6 committed sample images
-├── tests/                      # 30 unit + end-to-end (mock) tests, no network
-├── .github/workflows/ci.yml    # CI: tests + headless app smoke test on every push/PR
+├── tests/                      # 32 unit + integration tests, no network needed
+├── .github/workflows/ci.yml    # CI: tests + real-server boot check on every push/PR
 ├── docs/ASSIGNMENT.md          # the original take-home brief, preserved
 ├── requirements.txt
 └── .streamlit/                 # theme + secrets template

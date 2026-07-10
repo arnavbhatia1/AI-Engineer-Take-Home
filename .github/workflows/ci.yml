@@ -12,6 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # 3.11 mirrors Streamlit Community Cloud's default runtime.
         python-version: ["3.11", "3.12"]
 
     steps:
@@ -28,24 +29,34 @@ jobs:
       - name: Byte-compile everything (catches syntax errors)
         run: python -m compileall -q app.py src tests samples
 
-      - name: Unit tests
+      - name: Unit and integration tests
+        # Includes tests/test_samples.py, which runs the full bundled-samples
+        # batch end to end (CSV -> images -> concurrent verify -> verdicts).
         run: python -m unittest discover -s tests -v
 
-      - name: App smoke test (headless Streamlit AppTest, demo mode)
+      - name: App boots (real Streamlit server + health check)
+        # Boot the app exactly the way Streamlit Community Cloud does and
+        # confirm it comes up healthy and serves the main page.
         run: |
-          python - <<'PY'
-          from streamlit.testing.v1 import AppTest
+          streamlit run app.py --server.headless true --server.port 8601 \
+            --browser.gatherUsageStats false &
+          APP_PID=$!
 
-          # Boot the whole app headlessly; any exception fails the build.
-          at = AppTest.from_file("app.py", default_timeout=60).run()
-          assert not at.exception, f"app raised on load: {at.exception}"
+          healthy=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8601/_stcore/health 2>/dev/null | grep -q ok; then
+              healthy=1
+              break
+            fi
+            sleep 2
+          done
 
-          # Drive the bundled-samples batch end to end.
-          btn = [b for b in at.button if "bundled samples" in b.label][0]
-          done = btn.click().run()
-          assert not done.exception, f"batch run raised: {done.exception}"
+          if [ "$healthy" -ne 1 ]; then
+            echo "::error::Streamlit server never became healthy"
+            kill "$APP_PID" 2>/dev/null || true
+            exit 1
+          fi
 
-          metrics = {m.label: m.value for m in done.metric}
-          assert metrics.get("Total") == "6", f"unexpected batch metrics: {metrics}"
-          print("smoke test OK:", metrics)
-          PY
+          curl -fsS -o /dev/null -w "main page: HTTP %{http_code}\n" http://localhost:8601/
+          echo "server healthy and serving"
+          kill "$APP_PID"
