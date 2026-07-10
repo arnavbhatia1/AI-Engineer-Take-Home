@@ -1,0 +1,12 @@
+# Clean, high-contrast light theme — chosen deliberately for a mixed-tech-comfort
+# audience (half the review team is 50+). Warm amber primary nods to the domain.
+[theme]
+base = "light"
+primaryColor = "#b45309"
+font = "sans serif"
+
+[server]
+maxUploadSize = 100
+
+[browser]
+gatherUsageStats = false

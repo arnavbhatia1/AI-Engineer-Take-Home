@@ -1,0 +1,5 @@
+streamlit>=1.55
+anthropic>=0.40
+pydantic>=2.5
+pillow>=10.0
+pandas>=2.0
