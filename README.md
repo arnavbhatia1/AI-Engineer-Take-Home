@@ -9,7 +9,7 @@ It reads a label image with a vision model, then applies deterministic,
 auditable compliance rules and returns a clear **APPROVED / REJECTED / NEEDS
 REVIEW** verdict — for one label or hundreds at a time.
 
-> **🔗 Live app:** _paste your Streamlit URL here after deploying (see [Deploy](#deploy-free-in-5-minutes))._
+> **🔗 Live app:** https://arnav-bhatia-department-of-treasury-take-home.streamlit.app/
 
 ---
 

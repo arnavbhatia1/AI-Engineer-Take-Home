@@ -1,8 +1,12 @@
-# Clean, high-contrast light theme — chosen deliberately for a mixed-tech-comfort
-# audience (half the review team is 50+). Warm amber primary nods to the domain.
+# Institutional Treasury/TTB look — deep navy, parchment, gold accents.
+# Committed to a light theme deliberately: dignified, high-contrast, and easy
+# on the eye for a mixed-tech-comfort audience (half the review team is 50+).
 [theme]
 base = "light"
-primaryColor = "#b45309"
+primaryColor = "#0f2a4a"
+backgroundColor = "#f4f1ea"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1b2430"
 font = "sans serif"
 
 [server]

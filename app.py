@@ -44,41 +44,149 @@ st.set_page_config(page_title="TTB Label Verifier", page_icon="🥃", layout="wi
 st.markdown(
     """
     <style>
-      html, body, [class*="css"] { font-size: 16.5px; }
-      .big-title { font-size: 2.0rem; font-weight: 800; margin-bottom: 0.1rem; }
-      .subtitle { color: #6b7280; font-size: 1.05rem; margin-top: 0; }
-      .verdict {
-          border-radius: 12px; padding: 1.1rem 1.3rem; margin: 0.6rem 0 1rem 0;
-          font-size: 1.5rem; font-weight: 800; display: flex; align-items: center;
-          gap: 0.6rem; border: 2px solid transparent;
+      @import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap');
+
+      :root {
+        --navy:#0f2a4a; --navy-deep:#0a1f38; --gold:#a67c1a; --gold-soft:#c9a94e;
+        --parchment:#f4f1ea; --card:#ffffff; --line:#e4ddcf;
+        --ink:#1b2430; --muted:#6d6a61;
+        --green:#1e7a46; --green-bg:rgba(30,122,70,.10);
+        --red:#b3261e;   --red-bg:rgba(179,38,30,.10);
+        --amber:#9a6a00; --amber-bg:rgba(154,106,0,.10);
+        --grey:#5f6b7a;  --grey-bg:rgba(95,107,122,.10);
       }
-      .v-approved { background: rgba(22,163,74,.12); color: #16a34a; border-color: rgba(22,163,74,.5); }
-      .v-rejected { background: rgba(220,38,38,.12); color: #dc2626; border-color: rgba(220,38,38,.5); }
-      .v-review   { background: rgba(217,119,6,.12); color: #d97706; border-color: rgba(217,119,6,.5); }
-      .v-error    { background: rgba(107,114,128,.14); color: #6b7280; border-color: rgba(107,114,128,.5); }
-      .field-card {
-          border-left: 6px solid #9ca3af; background: rgba(148,163,184,.08);
-          border-radius: 8px; padding: 0.6rem 0.9rem; margin: 0.45rem 0;
+
+      /* base */
+      .stApp { background: var(--parchment); color: var(--ink); }
+      html, body, .stApp, button, input, textarea, select, .stApp p, .stApp label,
+      [data-testid="stMarkdownContainer"],
+      [data-testid="stMarkdownContainer"] span, [data-testid="stMarkdownContainer"] div {
+        font-family:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
-      .fc-pass   { border-left-color: #16a34a; }
-      .fc-fail   { border-left-color: #dc2626; }
-      .fc-review { border-left-color: #d97706; }
-      .fc-title { font-weight: 700; font-size: 1.05rem; }
-      .fc-meta  { color: #6b7280; font-size: 0.92rem; margin: 0.15rem 0; }
-      .chip { font-weight: 800; font-size: 0.8rem; padding: 0.1rem 0.5rem;
-              border-radius: 999px; margin-right: 0.4rem; }
-      .chip-pass   { background: rgba(22,163,74,.18); color: #16a34a; }
-      .chip-fail   { background: rgba(220,38,38,.18); color: #dc2626; }
-      .chip-review { background: rgba(217,119,6,.18); color: #d97706; }
+      /* Never override Material icon fonts (expander chevrons, uploader icons, …) */
+      [data-testid="stIconMaterial"], span[class*="material-symbols"], span[class*="material-icons"] {
+        font-family:'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
+      }
+      h1,h2,h3,h4,.mast-title,.sec-title,.v-title {
+        font-family:'Source Serif 4', Georgia, 'Times New Roman', serif !important;
+        color: var(--navy); letter-spacing:.2px;
+      }
+      .block-container { max-width: 1180px; padding-top: 0.6rem; padding-bottom: 3rem; }
+      [data-testid="stHeader"] { background: transparent; }
+
+      /* federal utility strip + masthead */
+      .gov-bar { background: var(--navy-deep); border-radius: 8px 8px 0 0; }
+      .gov-bar-inner { padding:.42rem 1rem; display:flex; justify-content:space-between;
+        align-items:center; gap:1rem; flex-wrap:wrap; font-size:.76rem; letter-spacing:.03em; }
+      .gov-bar-inner span { color:#c7d0de; }
+      .gov-bar .star { color: var(--gold-soft); }
+      .masthead { background: var(--navy); border-radius:0 0 8px 8px; padding:1.15rem 1.3rem;
+        display:flex; align-items:center; gap:1.1rem; border-top:3px solid var(--gold);
+        box-shadow:0 10px 30px rgba(15,42,74,.18); }
+      .masthead .crest { flex:0 0 auto; line-height:0; }
+      .mast-text { flex:1 1 auto; }
+      .mast-eyebrow { text-transform:uppercase; letter-spacing:.17em; font-size:.72rem;
+        font-weight:700; color:var(--gold-soft); margin-bottom:.18rem; }
+      .mast-title { font-size:1.95rem; font-weight:700; line-height:1.03; color:#fff !important; }
+      .mast-sub { color:#c4cede; font-size:.95rem; margin-top:.3rem; }
+      .mast-badge { flex:0 0 auto; align-self:flex-start; border:1px solid var(--gold-soft);
+        color:var(--gold-soft); border-radius:999px; padding:.16rem .62rem; font-size:.66rem;
+        font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+      .lede { color:var(--muted); font-size:1.02rem; margin:1rem 0 .3rem; max-width:52rem; }
+
+      /* section headers */
+      .sec { margin:.5rem 0 .55rem; }
+      .sec-eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:.72rem;
+        font-weight:800; color:var(--gold); }
+      .sec-title { font-size:1.3rem; font-weight:700; color:var(--navy); line-height:1.1;
+        border-bottom:2px solid var(--line); padding-bottom:.36rem; }
+
+      /* verdict */
+      .verdict { display:flex; align-items:center; gap:.95rem; background:var(--card);
+        border:1px solid var(--line); border-left:6px solid var(--grey); border-radius:10px;
+        padding:1rem 1.15rem; margin:.4rem 0 1rem; box-shadow:0 2px 12px rgba(20,30,50,.06); }
+      .v-icon { flex:0 0 auto; width:46px; height:46px; border-radius:50%; color:#fff;
+        display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800; }
+      .v-eyebrow { text-transform:uppercase; letter-spacing:.15em; font-size:.7rem;
+        font-weight:800; color:var(--muted); }
+      .v-title { font-size:1.5rem; font-weight:700; line-height:1.05; }
+      .v-sub { color:var(--muted); font-size:.96rem; margin-top:.1rem; }
+      .v-approved{border-left-color:var(--green)} .v-approved .v-icon{background:var(--green)} .v-approved .v-title{color:var(--green)}
+      .v-rejected{border-left-color:var(--red)}   .v-rejected .v-icon{background:var(--red)}   .v-rejected .v-title{color:var(--red)}
+      .v-review{border-left-color:var(--amber)}    .v-review .v-icon{background:var(--amber)}    .v-review .v-title{color:var(--amber)}
+      .v-error{border-left-color:var(--grey)}      .v-error .v-icon{background:var(--grey)}      .v-error .v-title{color:var(--grey)}
+
+      /* field cards */
+      .field-card { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--grey);
+        border-radius:8px; padding:.72rem .95rem; margin:.5rem 0; box-shadow:0 1px 4px rgba(20,30,50,.04); }
+      .fc-pass{border-left-color:var(--green)} .fc-fail{border-left-color:var(--red)} .fc-review{border-left-color:var(--amber)}
+      .fc-head { display:flex; align-items:center; gap:.55rem; }
+      .fc-title { font-weight:700; font-size:1.05rem; color:var(--navy); }
+      .fc-meta { color:var(--muted); font-size:.9rem; margin:.3rem 0 .18rem; }
+      .fc-detail { font-size:.97rem; color:var(--ink); }
+      .pill { display:inline-flex; align-items:center; gap:.34rem; font-weight:800; font-size:.68rem;
+        letter-spacing:.06em; text-transform:uppercase; padding:.17rem .55rem; border-radius:999px; }
+      .pill .dot { width:.5rem; height:.5rem; border-radius:50%; background:currentColor; }
+      .pill-pass{color:var(--green);background:var(--green-bg)} .pill-fail{color:var(--red);background:var(--red-bg)}
+      .pill-review{color:var(--amber);background:var(--amber-bg)}
+
+      /* buttons */
+      .stButton>button, .stDownloadButton>button { border-radius:6px; font-weight:700;
+        border:1px solid var(--navy); color:var(--navy); background:#fff; transition:all .12s ease; }
+      .stButton>button:hover, .stDownloadButton>button:hover { background:#eef1f6; border-color:var(--navy-deep); color:var(--navy-deep); }
+      .stButton>button[kind="primary"] { background:var(--navy); color:#fff; }
+      .stButton>button[kind="primary"]:hover { background:var(--navy-deep); color:#fff; }
+
+      /* tabs */
+      [data-baseweb="tab-list"] { gap:.4rem; border-bottom:1px solid var(--line); }
+      [data-baseweb="tab"] { font-weight:600; color:var(--muted); }
+      [data-baseweb="tab"][aria-selected="true"] { color:var(--navy); }
+      [data-baseweb="tab-highlight"] { background:var(--navy); height:3px; }
+
+      /* inputs */
+      .stTextInput div[data-baseweb="input"], [data-testid="stFileUploaderDropzone"] {
+        border-radius:6px; border-color:var(--line); }
+      .stTextInput div[data-baseweb="input"]:focus-within { border-color:var(--navy); box-shadow:0 0 0 1px var(--navy); }
+
+      /* metrics, expander */
+      [data-testid="stMetric"] { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.55rem .85rem; }
+      [data-testid="stMetricValue"] { color:var(--navy); font-weight:800; }
+      [data-testid="stExpander"] { border:1px solid var(--line); border-radius:8px; background:var(--card); }
+      [data-testid="stExpander"] summary { font-weight:600; color:var(--navy); }
+
+      /* footer */
+      .site-footer { margin-top:2.4rem; padding-top:1rem; border-top:1px solid var(--line);
+        color:var(--muted); font-size:.82rem; text-align:center; line-height:1.6; }
+      .site-footer b { color:var(--navy); }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown('<div class="big-title">🥃 TTB Label Verifier</div>', unsafe_allow_html=True)
+# Masthead — federal utility strip + a stylised crest (NOT an official seal) and
+# wordmark. Everything is explicitly labelled a prototype.
 st.markdown(
-    '<p class="subtitle">Check that a label\'s artwork matches its application — '
-    "brand, alcohol content, net contents, and the mandatory Government Warning.</p>",
+    '<div class="gov-bar"><div class="gov-bar-inner">'
+    '<span><span class="star">★</span>&nbsp; Proof-of-concept demonstration</span>'
+    '<span>Alcohol &amp; Tobacco Tax and Trade Bureau &nbsp;·&nbsp; U.S. Department of the Treasury</span>'
+    "</div></div>"
+    '<div class="masthead">'
+    '<div class="crest">'
+    '<svg width="62" height="62" viewBox="0 0 100 100" role="img" aria-label="emblem">'
+    '<circle cx="50" cy="50" r="47" fill="#0a1f38" stroke="#a67c1a" stroke-width="3"/>'
+    '<circle cx="50" cy="50" r="39" fill="none" stroke="#c9a94e" stroke-width="1" opacity=".55"/>'
+    '<path d="M50,26 L55.6,42.3 L72.8,42.6 L59,52.9 L64.1,69.4 L50,59.5 L35.9,69.4 L41,52.9 L27.2,42.6 L44.4,42.3 Z" fill="#c9a94e"/>'
+    "</svg>"
+    "</div>"
+    '<div class="mast-text">'
+    '<div class="mast-eyebrow">TTB Label Compliance</div>'
+    '<div class="mast-title">Label Verification Console</div>'
+    '<div class="mast-sub">AI-assisted review of alcohol beverage labels against COLA applications</div>'
+    "</div>"
+    '<div class="mast-badge">Prototype</div>'
+    "</div>"
+    '<p class="lede">Confirm a label&#39;s artwork matches its application — brand name, '
+    "alcohol content, net contents, and the mandatory Government Health Warning — in seconds.</p>",
     unsafe_allow_html=True,
 )
 
@@ -115,48 +223,64 @@ else:
 # Rendering helpers
 # ---------------------------------------------------------------------------
 
-_STATUS_CHIP = {
-    Status.PASS: '<span class="chip chip-pass">PASS</span>',
-    Status.FAIL: '<span class="chip chip-fail">FAIL</span>',
-    Status.REVIEW: '<span class="chip chip-review">REVIEW</span>',
+_STATUS_PILL = {
+    Status.PASS: '<span class="pill pill-pass"><span class="dot"></span>Pass</span>',
+    Status.FAIL: '<span class="pill pill-fail"><span class="dot"></span>Fail</span>',
+    Status.REVIEW: '<span class="pill pill-review"><span class="dot"></span>Review</span>',
 }
 _FC_CLASS = {Status.PASS: "fc-pass", Status.FAIL: "fc-fail", Status.REVIEW: "fc-review"}
 
 
+def section_header(title: str, eyebrow: str = "") -> None:
+    eb = f'<div class="sec-eyebrow">{eyebrow}</div>' if eyebrow else ""
+    st.markdown(f'<div class="sec">{eb}<div class="sec-title">{title}</div></div>', unsafe_allow_html=True)
+
+
 def render_verdict(report: VerificationReport) -> None:
     mapping = {
-        OverallStatus.APPROVED: ("v-approved", "✅", "APPROVED — label matches the application"),
-        OverallStatus.REJECTED: ("v-rejected", "❌", "REJECTED — one or more checks failed"),
-        OverallStatus.NEEDS_REVIEW: ("v-review", "⚠️", "NEEDS REVIEW — a human should take a look"),
-        OverallStatus.ERROR: ("v-error", "🛑", "COULD NOT ANALYSE"),
+        OverallStatus.APPROVED: ("v-approved", "✓", "Approved", "Label matches the application."),
+        OverallStatus.REJECTED: ("v-rejected", "✕", "Rejected", "One or more required checks failed."),
+        OverallStatus.NEEDS_REVIEW: ("v-review", "!", "Needs review", "A compliance agent should take a look."),
+        OverallStatus.ERROR: ("v-error", "–", "Could not analyse", "The label could not be read."),
     }
-    cls, icon, text = mapping[report.overall]
-    st.markdown(f'<div class="verdict {cls}">{icon}&nbsp;{text}</div>', unsafe_allow_html=True)
+    cls, icon, title, sub = mapping[report.overall]
+    st.markdown(
+        f'<div class="verdict {cls}">'
+        f'<div class="v-icon">{icon}</div>'
+        f'<div><div class="v-eyebrow">Verdict</div>'
+        f'<div class="v-title">{title}</div>'
+        f'<div class="v-sub">{sub}</div></div>'
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
     if report.error:
         st.error(report.error)
         return
 
-    latency_flag = "  ·  ⏱️ over the 5s target" if report.is_over_latency_target else ""
+    latency_flag = "  ·  ⏱ over the 5s target" if report.is_over_latency_target else ""
     demo_flag = "  ·  demo data" if report.demo_mode else ""
     st.caption(f"Analysed in **{report.elapsed_seconds:.1f}s**{latency_flag}{demo_flag}")
 
 
 def render_fields(report: VerificationReport) -> None:
     for r in report.field_results:
-        chip = _STATUS_CHIP.get(r.status, "")
+        pill = _STATUS_PILL.get(r.status, "")
         meta_bits = []
         if r.expected and r.field != "Government Warning":
             meta_bits.append(f"Application: <b>{_esc(r.expected)}</b>")
         if r.found and r.field != "Government Warning":
             meta_bits.append(f"On label: <b>{_esc(r.found)}</b>")
         meta = "<div class='fc-meta'>" + " &nbsp;·&nbsp; ".join(meta_bits) + "</div>" if meta_bits else ""
+        # Single-line HTML on purpose: a blank line inside the block (e.g. when
+        # `meta` is empty) would terminate the HTML block and make Streamlit's
+        # Markdown parser render the rest as a literal code block.
         st.markdown(
-            f"""<div class="field-card {_FC_CLASS.get(r.status, '')}">
-                <div class="fc-title">{chip}{_esc(r.field)}</div>
-                {meta}
-                <div>{_esc(r.detail)}</div>
-            </div>""",
+            f'<div class="field-card {_FC_CLASS.get(r.status, "")}">'
+            f'<div class="fc-head">{pill}<span class="fc-title">{_esc(r.field)}</span></div>'
+            f"{meta}"
+            f'<div class="fc-detail">{_esc(r.detail)}</div>'
+            f"</div>",
             unsafe_allow_html=True,
         )
 
@@ -241,7 +365,7 @@ with tab_single:
     left, right = st.columns([1, 1], gap="large")
 
     with left:
-        st.subheader("Step 1 · The label")
+        section_header("The label", "Step 1")
 
         choice = st.selectbox(
             "Start from a sample (optional)",
@@ -284,7 +408,7 @@ with tab_single:
         if image_bytes:
             st.image(image_bytes, caption=image_name, width="stretch")
 
-        st.subheader("Step 2 · The application")
+        section_header("The application", "Step 2")
         st.caption("What the COLA application says this label should contain.")
         brand = st.text_input("Brand name", key="f_brand")
         class_type = st.text_input("Class / type", key="f_class")
@@ -297,7 +421,7 @@ with tab_single:
         verify_clicked = st.button("✓  Verify label", type="primary", width="stretch")
 
     with right:
-        st.subheader("Result")
+        section_header("Result", "Verdict")
         if verify_clicked:
             if not image_bytes:
                 st.error("Please choose a sample or upload a label image first.")
@@ -324,7 +448,7 @@ with tab_single:
 
 # ----- Batch ---------------------------------------------------------------
 with tab_batch:
-    st.subheader("Verify many labels at once")
+    section_header("Verify many labels at once", "Batch")
     st.caption(
         "For peak season, when importers submit hundreds of applications. "
         "Labels are analysed in parallel and you can download a full report."
@@ -454,3 +578,16 @@ with tab_batch:
                 render_verdict(r.report)
                 render_fields(r.report)
                 render_extraction(r.report)
+
+
+# ---------------------------------------------------------------------------
+# Footer
+# ---------------------------------------------------------------------------
+st.markdown(
+    '<div class="site-footer">'
+    "<b>TTB Label Verification Console</b> — standalone proof-of-concept · "
+    "Not an official government system · Images are processed in-memory and not stored.<br>"
+    "Government Health Warning reference: 27 CFR § 16.21."
+    "</div>",
+    unsafe_allow_html=True,
+)
