@@ -1,8 +1,8 @@
 """Concurrent batch verification.
 
 Peak-season importers drop 200-300 applications at once (Janet's ask). We fan
-the work out across a small thread pool — each label is one independent API
-call — and report results as they complete so the UI can show live progress.
+the work out across a small thread pool - each label is one independent API
+call - and report results as they complete so the UI can show live progress.
 Concurrency is capped (config.BATCH_MAX_WORKERS) to stay under API rate limits.
 """
 from __future__ import annotations

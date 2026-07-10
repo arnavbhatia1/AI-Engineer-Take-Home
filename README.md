@@ -1,13 +1,12 @@
 # 🥃 TTB Label Verifier
 
-An AI-powered tool that checks whether an alcohol beverage **label's artwork
-matches its COLA application** — and that the mandatory **Government Health
-Warning** is present, correctly worded, and in all caps.
+An AI-powered tool that checks whether an alcohol beverage label matches its
+COLA application, including the mandatory Government Health Warning (present,
+worded exactly as regulation requires, and in all caps).
 
-Built as a standalone proof-of-concept for the TTB Label Compliance take-home.
-It reads a label image with a vision model, then applies deterministic,
-auditable compliance rules and returns a clear **APPROVED / REJECTED / NEEDS
-REVIEW** verdict — for one label or hundreds at a time.
+It reads a label image with a vision model, applies deterministic and
+auditable compliance rules, and returns a clear **APPROVED / REJECTED /
+NEEDS REVIEW** verdict. It handles one label at a time or hundreds in a batch.
 
 > **🔗 Live app:** https://arnav-bhatia-department-of-treasury-take-home.streamlit.app/
 
@@ -15,37 +14,38 @@ REVIEW** verdict — for one label or hundreds at a time.
 
 ## What it checks
 
-For each label it verifies, field by field, against the application:
+Each label is verified field by field against the application:
 
 | Check | Rule |
 | --- | --- |
-| **Brand name** | Case- and punctuation-insensitive match. `STONE'S THROW` == `Stone's Throw`. Near-misses are flagged for **human review**, not auto-failed. |
+| **Brand name** | Case- and punctuation-insensitive match. `STONE'S THROW` equals `Stone's Throw`. Near-misses are flagged for **human review**, not auto-failed. |
 | **Class / type** | Same fuzzy, human-in-the-loop matching. |
-| **Alcohol content** | Numeric comparison (`45%` == `45% Alc./Vol. (90 Proof)`). Also sanity-checks that proof ≈ 2 × ABV. |
-| **Net contents** | Quantity + unit, with unit normalisation (`750 mL` == `750ML`). |
+| **Alcohol content** | Numeric comparison (`45%` equals `45% Alc./Vol. (90 Proof)`). Also sanity-checks that proof is about twice the ABV. |
+| **Net contents** | Quantity plus unit, with unit normalisation (`750 mL` equals `750ML`). |
 | **Government Warning** | **Strict.** Must be present, **word-for-word** per 27 CFR 16.21, with the `GOVERNMENT WARNING:` heading in **all capitals**. Title-case, altered wording, or a missing statement all fail. |
 
-The verdict rolls up as: any **FAIL → REJECTED**, otherwise any **REVIEW →
-NEEDS REVIEW**, otherwise **APPROVED**.
+The verdict rolls up simply: any **FAIL** means **REJECTED**; otherwise any
+**REVIEW** means **NEEDS REVIEW**; otherwise **APPROVED**.
 
 ---
 
 ## Try it in 30 seconds
 
-The app ships with **six sample labels** that exercise every path. In **demo
-mode** (no API key needed) they work fully offline:
+The app ships with **six sample labels** that exercise every path. They work
+fully even in demo mode (no API key):
 
 | Sample | What's special | Expected verdict |
 | --- | --- | --- |
 | Old Tom Distillery | Clean, everything matches | ✅ APPROVED |
-| Stone's Throw Gin | Label `STONE'S THROW` vs application `Stone's Throw` | ✅ APPROVED (judgment) |
+| Stone's Throw Gin | Label says `STONE'S THROW`, application says `Stone's Throw` | ✅ APPROVED (judgment) |
 | Silver Creek Vodka | Warning heading is title-case `Government Warning:` | ❌ REJECTED |
-| Copper Ridge Rye | Label shows 40% but application says 45% | ❌ REJECTED |
+| Copper Ridge Rye | Label shows 40% but the application says 45% | ❌ REJECTED |
 | Harbor Light Rum | No Government Warning at all | ❌ REJECTED |
-| Golden Gate Brandy | Warning creatively reworded — shows a **word-level diff** of exactly what changed | ❌ REJECTED |
+| Golden Gate Brandy | Warning creatively reworded; the result shows a **word-level diff** of exactly what changed | ❌ REJECTED |
 
-Open the deployed app → **Single label** tab → pick a sample → **Verify**.
-Or the **Batch** tab → **Run the 6 bundled samples**.
+Open the live app, go to the **Single label** tab, pick a sample, and press
+**Verify label**. Or open the **Batch** tab and press **Run the 6 bundled
+samples**.
 
 ---
 
@@ -58,8 +58,8 @@ Requires Python 3.10+.
 pip install -r requirements.txt
 
 # 2. (Optional) enable live AI reading of your own uploads
-cp .env.example .env          # then edit .env and add your ANTHROPIC_API_KEY
-#   ...or on Windows PowerShell:  copy .env.example .env
+cp .env.example .env    # then edit .env and add your ANTHROPIC_API_KEY
+#   on Windows PowerShell:  copy .env.example .env
 
 # 3. Run
 streamlit run app.py
@@ -67,20 +67,22 @@ streamlit run app.py
 
 The app opens at `http://localhost:8501`.
 
-- **No API key?** It runs in **demo mode** — the six bundled samples work
-  fully; your own uploads show a "demo mode" note.
+- **No API key?** The app runs in demo mode: the six bundled samples work
+  fully, and your own uploads show a demo-mode note.
 - **With an API key** (in `.env`, your shell, or `.streamlit/secrets.toml`)
-  it reads any label you upload with the live vision model.
-
-Get a key at <https://console.anthropic.com/>.
+  it reads any label you upload with the live vision model. Get a key at
+  <https://console.anthropic.com/>.
 
 ### Run the tests
 
-Pure-logic tests — no network, no key required:
+Pure-logic tests, no network or key required:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+The same suite, plus a headless boot-and-batch smoke test of the app itself,
+runs in CI on every push and pull request (`.github/workflows/ci.yml`).
 
 ### Regenerate the sample labels
 
@@ -90,152 +92,137 @@ python samples/generate_samples.py
 
 ---
 
-## Deploy free in 5 minutes
+## Deployment
 
-**Streamlit Community Cloud** is the simplest free host for this app.
+The live app above runs on **Streamlit Community Cloud** (free tier). To
+deploy your own copy:
 
-1. **Push this repo to GitHub** (public or private).
-2. Go to <https://share.streamlit.io> and sign in with GitHub.
-3. Click **Create app** → **Deploy a public app from GitHub**.
-4. Select your repo/branch and set **Main file path** to `app.py`.
-5. Click **Advanced settings → Secrets** and paste:
+1. Push this repo to GitHub.
+2. Go to <https://share.streamlit.io>, sign in with GitHub, and click
+   **Create app**.
+3. Select the repo and branch, and set **Main file path** to `app.py`.
+4. Under **Advanced settings → Secrets**, paste:
    ```toml
    ANTHROPIC_API_KEY = "sk-ant-your-key-here"
-   # Optional, for the fastest turnaround toward the 5s target:
+   # Optional: a faster model tier for the quickest results
    # LABEL_MODEL = "claude-sonnet-5"
    ```
-6. Click **Deploy**. In ~2 minutes you'll get a public URL like
-   `https://your-app.streamlit.app` — paste it at the top of this README.
+5. Click **Deploy**. A public URL is ready in about two minutes.
 
-That's it. Graders open the URL and test live; the key stays in Streamlit's
-encrypted secrets and is never in the repo.
+The key lives in Streamlit's encrypted secrets and is never in the repo.
+Without a key the deployed app still fully demonstrates the pass/fail logic
+on the six bundled samples in demo mode.
 
-> **Cost note:** each label reading is one small vision API call (a few cents
-> at most). If you'd rather not attach a key, the deployed app still fully
-> demonstrates the pass/fail logic on the six bundled samples in demo mode.
+> **Cost note:** each label reading is one small vision API call, a few cents
+> at most.
 
 <details>
-<summary>Alternative: Hugging Face Spaces</summary>
+<summary>Alternative host: Hugging Face Spaces</summary>
 
-Create a new **Streamlit** Space, push these files, and add `ANTHROPIC_API_KEY`
-under **Settings → Variables and secrets**. Same `app.py` entry point.
+Create a new **Streamlit** Space, push these files, and add
+`ANTHROPIC_API_KEY` under **Settings → Variables and secrets**. Same `app.py`
+entry point.
 </details>
 
 ---
 
 ## Approach
 
-**One principle drives the design: the model _reads_, the code _decides._**
+One principle drives the design: **the model reads, the code decides.**
 
-```
-        label image                      application data (COLA)
-             │                                    │
-             ▼                                    │
-   ┌───────────────────┐                          │
-   │ Vision extraction │  Claude vision + a single │
-   │  (src/extraction) │  forced tool call → strict│
-   └─────────┬─────────┘  structured JSON          │
-             │  LabelExtraction (verbatim)         │
-             ▼                                      ▼
-        ┌──────────────────────────────────────────────┐
-        │  Verification engine (src/verification.py)     │
-        │  deterministic, unit-tested field rules +      │
-        │  the exact Government-Warning check            │
-        └───────────────────────┬────────────────────────┘
-                                 ▼
-                        VerificationReport
-                  (APPROVED / REJECTED / NEEDS REVIEW)
-```
+1. **Read.** The label image goes to Claude vision in a single forced tool
+   call that returns strict structured JSON (`src/extraction.py`). The model
+   is told to transcribe the label *verbatim* and never to correct or
+   normalise what it sees.
+2. **Decide.** Deterministic, unit-tested Python rules compare the reading to
+   the application (`src/verification.py`). All pass/fail judgment lives
+   here, in auditable code, never in the model prompt.
+3. **Report.** Each field gets a PASS / FAIL / REVIEW result with a
+   plain-language explanation, rolled up into the overall verdict.
 
-Why split it this way:
+Why this split matters:
 
-- **The vision model does what it's uniquely good at** — reading text off
-  imperfect artwork (glare, skew, odd fonts) and returning it *verbatim*. It is
-  explicitly told **not** to normalise or "fix" anything.
-- **The pass/fail judgment lives in plain Python** — so the rules are
-  deterministic, auditable, and unit-tested (30 tests, no network). The
-  Government-Warning check in particular is a real compliance rule, not a vibe:
-  it enforces exact wording and the all-caps heading in code, and shows a
-  word-level diff when the wording drifts.
-- **Fuzzy where it should be, strict where it must be.** Brand/type matching
-  tolerates case and punctuation and *escalates close calls to a human* (Dave's
-  "STONE'S THROW is obviously the same thing" point). The warning statement is
-  compared verbatim (Jenny's "it has to be exact" point).
+- **The vision model does what it's uniquely good at:** reading text off
+  imperfect artwork (glare, skew, odd fonts) and returning it verbatim.
+- **The compliance rules stay deterministic and auditable.** The
+  Government Warning check enforces the exact wording and the all-caps
+  heading in code (30 tests, no network needed), and produces a word-level
+  diff when the wording drifts.
+- **Fuzzy where it should be, strict where it must be.** Brand and type
+  matching tolerates case and punctuation and escalates close calls to a
+  human, because "STONE'S THROW" on a label is obviously the same brand as
+  "Stone's Throw" on an application. The warning statement, by contrast, is
+  compared word for word because the regulation requires it.
 
-**Speed.** Extraction is a single API round-trip that returns a small
-structured record via a forced tool call — no extended thinking, minimal output
-— to stay under the **5-second** target the stakeholders called out as
-make-or-break. Oversized uploads (e.g. raw phone photos) are **downscaled
-client-side** before the call (`src/imaging.py`): past ~1568px the model gains
-nothing, so larger images only add upload time and tokens — and anything over
+**Speed.** Extraction is a single API round-trip with no extended thinking
+and minimal output, sized to stay under the 5-second turnaround that makes a
+tool like this usable in practice. Oversized uploads such as raw phone photos
+are downscaled client-side first (`src/imaging.py`): beyond ~1568px the model
+gains nothing, larger files only add upload time and cost, and anything past
 the API's 5 MB image cap would fail outright. The measured time is shown on
-every result. The model is configurable (`LABEL_MODEL`); the default is the
-most capable Opus tier, and a faster tier (`claude-sonnet-5` /
-`claude-haiku-4-5`) trades a little accuracy for lower latency if needed.
+every result. The model is configurable via `LABEL_MODEL`; the default is the
+most capable tier, and a faster tier (`claude-sonnet-5` or `claude-haiku-4-5`)
+trades a little accuracy for lower latency.
 
-**Explainability.** When the Government Warning wording drifts from the
-mandate, the result shows a **word-level diff** — mandated text vs. label text
-with the missing words highlighted and the substituted words struck through —
-so the agent sees exactly *what* to cite in the rejection, not just that it
+**Explainability.** When the warning wording drifts from the mandate, the
+result shows a word-level diff: the mandated text with the required words
+highlighted, and the label's text with the substituted words struck through.
+The reviewer sees exactly what to cite in the rejection, not just that it
 failed.
 
-**Batch.** Peak-season importers submit hundreds at once (Janet's ask). Batch
-mode fans the work across a small thread pool and streams live progress, then
-offers a downloadable CSV report.
+**Batch.** Peak season brings hundreds of applications at once. Batch mode
+fans the work across a thread pool, streams live progress, and produces a
+downloadable CSV report.
 
-**UX.** Half the review team is 50+ and tech comfort varies. The UI is one
-screen with big, colour-coded verdicts, plain-language explanations for every
-finding, sample data one click away, and no hunting for buttons.
+**UX.** Built for a review team with a wide range of tech comfort: one
+screen, large colour-coded verdicts, plain-language explanations for every
+finding, and sample data one click away.
 
 ---
 
 ## Tools used
 
-- **[Streamlit](https://streamlit.io)** — the UI and free hosting. Fastest path
-  to a clean, deployable internal tool.
-- **[Claude](https://www.anthropic.com/claude) vision** (Anthropic API) — reads
-  the label. A single forced tool call returns strict structured JSON, which
-  keeps latency low and parsing trivial.
-- **[Pydantic](https://docs.pydantic.dev)** — validates the model's structured
+- **[Streamlit](https://streamlit.io)**: the UI and free hosting. The fastest
+  path to a clean, deployable internal tool.
+- **[Claude](https://www.anthropic.com/claude) vision** (Anthropic API):
+  reads the label. A single forced tool call returns strict structured JSON,
+  which keeps latency low and parsing trivial.
+- **[Pydantic](https://docs.pydantic.dev)**: validates the model's structured
   output.
-- **[Pillow](https://python-pillow.org)** — generates the synthetic sample
-  labels (offline, no external image services).
-- **[pandas](https://pandas.pydata.org)** — CSV handling for batch mode.
-- **Python standard library** — `difflib` for fuzzy/diff logic,
-  `concurrent.futures` for batch parallelism. No heavyweight ML deps.
+- **[Pillow](https://python-pillow.org)**: image downscaling, plus generating
+  the synthetic sample labels (offline, no external image services).
+- **[pandas](https://pandas.pydata.org)**: CSV handling for batch mode.
+- **Python standard library**: `difflib` for fuzzy matching and diffs,
+  `concurrent.futures` for batch parallelism. No heavyweight ML dependencies.
 
 ---
 
-## Assumptions & trade-offs
+## Assumptions and trade-offs
 
-Called out honestly, since the brief asks for them:
-
-- **Cloud API vs. the agency firewall.** Marcus noted the network blocks many
-  outbound domains, which sank the last vendor's ML endpoints. This prototype
-  uses the cloud vision API because that's what makes a *free, publicly
-  testable* deployment possible. The extraction layer
-  (`src/extraction.py::ExtractionProvider`) is a deliberate seam: for a real
-  on-prem deployment you'd drop in a self-hosted / Azure-tenant vision model
-  behind the same interface **without touching the verification engine**. That
-  separation is the point.
-- **"Bold" is not verified.** The regulation also requires the warning to be
-  **bold**. Boldness isn't reliably recoverable from an image via text
+- **Cloud API vs. a locked-down agency network.** Government networks often
+  block outbound traffic to ML endpoints. This prototype uses a cloud vision
+  API because that is what makes a free, publicly testable deployment
+  possible. The extraction layer (`ExtractionProvider` in
+  `src/extraction.py`) is a deliberate seam: a real on-prem deployment would
+  drop in a self-hosted or Azure-tenant vision model behind the same
+  interface without touching the verification engine.
+- **Bold is not verified.** The regulation also requires the warning heading
+  to be bold. Boldness is not reliably recoverable from an image via text
   extraction, so this build verifies presence, wording, and capitalisation
-  (which *are* reliable) and treats bold as out of scope. It's flagged rather
-  than silently ignored.
-- **Application data is trusted input.** The tool verifies label-vs-application;
-  it assumes the application values themselves are correct.
+  (which are reliable) and documents bold as a known limitation.
+- **Application data is trusted input.** The tool verifies label against
+  application; it assumes the application values themselves are correct.
 - **Batch throughput is bounded by API rate limits.** Concurrency is capped
-  (`BATCH_MAX_WORKERS`, default 6) to stay safely under limits. A true
-  300-at-once peak-season run would use the Message Batches API or a queue;
-  that's noted as the next step, not built here.
-- **Demo mode is sample-only.** With no API key, only the six bundled labels
-  have canned readings (used for the offline demo and the tests). Real uploads
-  need a key.
-- **No storage / PII handling.** Per Marcus, nothing sensitive is stored — the
-  app holds images in memory for the duration of a request only. A production
-  version would need document-retention and PII controls.
-- **Not integrated with COLA.** Standalone POC by design.
+  (`BATCH_MAX_WORKERS`, default 6). A true 300-at-once peak-season run would
+  use the Message Batches API or a queue; that is the documented next step,
+  not built here.
+- **Demo mode covers the samples only.** Without an API key, only the six
+  bundled labels have canned readings (used for the offline demo and tests).
+  Real uploads need a key.
+- **No storage or PII handling.** Nothing is stored; images are held in
+  memory only for the duration of a request. A production version would need
+  document-retention and PII controls.
+- **Not integrated with COLA.** Standalone proof-of-concept by design.
 
 ---
 
@@ -243,26 +230,27 @@ Called out honestly, since the brief asks for them:
 
 ```
 .
-├── app.py                     # Streamlit UI (the only file that imports Streamlit)
+├── app.py                      # Streamlit UI (the only file that imports Streamlit)
 ├── src/
-│   ├── config.py              # TTB constants, thresholds, model selection
-│   ├── models.py              # ApplicationData, LabelExtraction, report types
-│   ├── extraction.py          # vision providers: Claude + offline demo/mock
-│   ├── imaging.py             # client-side downscale (5s target + API size cap)
-│   ├── verification.py        # the compliance engine (read-vs-decide lives here)
-│   └── batch.py               # concurrent batch runner
+│   ├── config.py               # TTB constants, thresholds, model selection
+│   ├── models.py               # ApplicationData, LabelExtraction, report types
+│   ├── extraction.py           # vision providers: Claude + offline demo/mock
+│   ├── imaging.py              # client-side downscale (speed + API size cap)
+│   ├── verification.py         # the compliance engine (all pass/fail rules)
+│   └── batch.py                # concurrent batch runner
 ├── samples/
-│   ├── generate_samples.py    # renders the 6 sample labels with Pillow
+│   ├── generate_samples.py     # renders the 6 sample labels with Pillow
 │   ├── applications.csv        # matching application data
 │   └── *.png                   # the 6 committed sample images
-├── tests/                     # 30 unit + end-to-end (mock) tests, no network
-├── docs/ASSIGNMENT.md         # the original take-home brief, preserved
+├── tests/                      # 30 unit + end-to-end (mock) tests, no network
+├── .github/workflows/ci.yml    # CI: tests + headless app smoke test on every push/PR
+├── docs/ASSIGNMENT.md          # the original take-home brief, preserved
 ├── requirements.txt
-└── .streamlit/                # theme + secrets template
+└── .streamlit/                 # theme + secrets template
 ```
 
 ---
 
 ## License
 
-Prototype for evaluation purposes.
+Prototype built for evaluation purposes.

@@ -24,7 +24,7 @@ BATCH_MAX_WORKERS: int = int(os.getenv("BATCH_MAX_WORKERS", "6"))
 
 # --- Matching thresholds ---------------------------------------------------
 # Text fields (brand, class/type) that normalise to the same string PASS.
-# Between these thresholds we flag for human REVIEW rather than auto-fail —
+# Between these thresholds we flag for human REVIEW rather than auto-fail -
 # this is Dave's "STONE'S THROW vs Stone's Throw is obviously the same" rule.
 TEXT_REVIEW_THRESHOLD: float = 0.82
 

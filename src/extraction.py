@@ -5,7 +5,7 @@ swappable. Today it's Claude via the Anthropic API; the same seam is where an
 on-prem / self-hosted vision model would drop in to satisfy the firewall
 constraint Marcus raised (see README "Assumptions & trade-offs").
 
-`MockProvider` powers offline demo mode and deterministic tests — it returns
+`MockProvider` powers offline demo mode and deterministic tests - it returns
 canned readings for the bundled sample labels so the whole pipeline (and UI)
 works without an API key.
 """
@@ -21,7 +21,7 @@ from .models import LabelExtraction
 _SYSTEM_PROMPT = (
     "You are a meticulous TTB label-compliance assistant. You are shown a "
     "photograph or artwork of an alcohol beverage label. Read ONLY what is "
-    "actually printed on the label and record it verbatim — do not correct, "
+    "actually printed on the label and record it verbatim - do not correct, "
     "normalise, translate, or infer values that are not shown. "
     "Preserve the EXACT capitalization and punctuation of the government "
     "warning statement, because capitalization is compliance-relevant. "
@@ -208,7 +208,7 @@ class MockProvider:
         for filename, extraction in MOCK_EXTRACTIONS.items():
             if key.endswith(filename):
                 return extraction.model_copy(deep=True)
-        # Unknown image in demo mode — we can't actually read it offline.
+        # Unknown image in demo mode - we can't actually read it offline.
         return LabelExtraction(
             legibility_notes=(
                 "Demo mode: this offline build only has canned readings for the "

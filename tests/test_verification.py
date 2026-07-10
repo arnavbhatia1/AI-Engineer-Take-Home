@@ -1,6 +1,6 @@
 """Unit tests for the verification engine.
 
-These are pure-logic tests — no network, no API key. They pin down the rules
+These are pure-logic tests - no network, no API key. They pin down the rules
 that matter most for compliance: the exact Government-Warning check and the
 fuzzy-but-safe field matching.
 

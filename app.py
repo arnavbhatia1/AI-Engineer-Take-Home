@@ -1,4 +1,4 @@
-"""TTB Label Verifier — Streamlit UI.
+"""TTB Label Verifier: Streamlit UI.
 
 Design goals, straight from the stakeholder interviews:
   - Clean and obvious. Big verdicts, plain language, no hunting for buttons.
@@ -28,12 +28,12 @@ SAMPLES_DIR = Path(__file__).parent / "samples"
 
 # Friendly label -> (filename, one-line expectation) for the sample picker.
 SAMPLE_LABELS = {
-    "Old Tom Distillery — clean label": "old_tom_bourbon.png",
-    "Stone's Throw Gin — case/punctuation differs": "stones_throw_gin.png",
-    "Silver Creek Vodka — title-case warning": "title_case_warning.png",
-    "Copper Ridge Rye — ABV mismatch": "wrong_abv.png",
-    "Harbor Light Rum — missing warning": "missing_warning.png",
-    "Golden Gate Brandy — reworded warning": "altered_warning.png",
+    "Old Tom Distillery (clean label)": "old_tom_bourbon.png",
+    "Stone's Throw Gin (case/punctuation differs)": "stones_throw_gin.png",
+    "Silver Creek Vodka (title-case warning)": "title_case_warning.png",
+    "Copper Ridge Rye (ABV mismatch)": "wrong_abv.png",
+    "Harbor Light Rum (missing warning)": "missing_warning.png",
+    "Golden Gate Brandy (reworded warning)": "altered_warning.png",
 }
 
 # ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Masthead — federal utility strip + a stylised crest (NOT an official seal) and
+# Masthead: federal utility strip + a stylised crest (NOT an official seal) and
 # wordmark. Everything is explicitly labelled a prototype.
 st.markdown(
     '<div class="gov-bar"><div class="gov-bar-inner">'
@@ -197,8 +197,8 @@ st.markdown(
     "</div>"
     '<div class="mast-badge">Prototype</div>'
     "</div>"
-    '<p class="lede">Confirm a label&#39;s artwork matches its application — brand name, '
-    "alcohol content, net contents, and the mandatory Government Health Warning — in seconds.</p>",
+    '<p class="lede">Confirm a label&#39;s artwork matches its application: brand name, '
+    "alcohol content, net contents, and the mandatory Government Health Warning. Results in seconds.</p>",
     unsafe_allow_html=True,
 )
 
@@ -212,7 +212,7 @@ def _secret(name: str):
     try:
         if name in st.secrets:
             return st.secrets[name]
-    except Exception:  # noqa: BLE001 — no secrets file locally is fine
+    except Exception:  # noqa: BLE001 - no secrets file locally is fine
         pass
     return os.getenv(name)
 
@@ -224,7 +224,7 @@ if API_KEY:
     st.caption(f"🟢 Live AI reading enabled · model **{MODEL}**")
 else:
     st.warning(
-        "**Demo mode** — no `ANTHROPIC_API_KEY` configured. The bundled sample "
+        "**Demo mode**: no `ANTHROPIC_API_KEY` configured. The bundled sample "
         "labels work fully (offline canned readings); add an API key to analyse your "
         "own uploads with the live vision model.",
         icon="🔌",
@@ -321,7 +321,7 @@ def render_fields(report: VerificationReport) -> None:
         meta = "<div class='fc-meta'>" + " &nbsp;·&nbsp; ".join(meta_bits) + "</div>" if meta_bits else ""
 
         # For a failed Government Warning with wording drift, show a word-level
-        # diff so the agent sees exactly what changed — not just that it did.
+        # diff so the agent sees exactly what changed, not just that it did.
         diff = ""
         if (
             r.field == "Government Warning"
@@ -430,7 +430,7 @@ with tab_single:
 
         choice = st.selectbox(
             "Start from a sample (optional)",
-            ["— Upload my own —", *SAMPLE_LABELS.keys()],
+            ["(Upload my own)", *SAMPLE_LABELS.keys()],
             help="Pick a sample to auto-fill everything, or upload your own label below.",
         )
 
@@ -621,7 +621,7 @@ with tab_batch:
                     "Label": r.name,
                     "Verdict": r.report.overall.value,
                     "Time (s)": round(r.report.elapsed_seconds, 1),
-                    "Issues": issues or ("—" if not r.report.error else r.report.error),
+                    "Issues": issues or ("none" if not r.report.error else r.report.error),
                 }
             )
         table_df = pd.DataFrame(table_rows)
@@ -635,7 +635,7 @@ with tab_batch:
         )
 
         for r in results:
-            with st.expander(f"{r.name} — {r.report.overall.value}"):
+            with st.expander(f"{r.name}: {r.report.overall.value}"):
                 render_verdict(r.report)
                 render_fields(r.report)
                 render_extraction(r.report)
@@ -646,7 +646,7 @@ with tab_batch:
 # ---------------------------------------------------------------------------
 st.markdown(
     '<div class="site-footer">'
-    "<b>TTB Label Verification Console</b> — standalone proof-of-concept · "
+    "<b>TTB Label Verification Console</b> · standalone proof-of-concept · "
     "Not an official government system · Images are processed in-memory and not stored.<br>"
     "Government Health Warning reference: 27 CFR § 16.21."
     "</div>",

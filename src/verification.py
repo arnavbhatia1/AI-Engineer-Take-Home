@@ -69,7 +69,7 @@ def match_text(field: str, expected: str, found: Optional[str]) -> FieldResult:
     if r >= TEXT_REVIEW_THRESHOLD:
         return FieldResult(
             field, expected, found, Status.REVIEW,
-            f"Close but not identical ({r:.0%} similar) — suggest a human check.",
+            f"Close but not identical ({r:.0%} similar); suggest a human check.",
         )
     return FieldResult(
         field, expected, found, Status.FAIL,
@@ -108,7 +108,7 @@ def match_abv(field: str, expected: str, found: Optional[str]) -> FieldResult:
     if e is None or f is None:
         return FieldResult(
             field, expected, found, Status.REVIEW,
-            "Could not read a numeric alcohol value — suggest a human check.",
+            "Could not read a numeric alcohol value; suggest a human check.",
         )
 
     if abs(e - f) > ABV_TOLERANCE:
@@ -117,7 +117,7 @@ def match_abv(field: str, expected: str, found: Optional[str]) -> FieldResult:
             f"Label shows {f:g}% but the application states {e:g}%.",
         )
 
-    # Values agree — sanity-check proof vs ABV on the label itself (proof = 2×ABV).
+    # Values agree; sanity-check proof vs ABV on the label itself (proof = 2×ABV).
     pct = _parse_percent(found)
     proof = _parse_proof(found)
     if pct is not None and proof is not None and abs(proof - 2 * pct) > 0.2:
@@ -164,7 +164,7 @@ def match_net_contents(field: str, expected: str, found: Optional[str]) -> Field
     if abs(e[0] - f[0]) < 1e-6 and e[1] != f[1]:
         return FieldResult(
             field, expected, found, Status.REVIEW,
-            f"Same quantity but different unit ({f[1]} vs {e[1]}) — suggest a human check.",
+            f"Same quantity but different unit ({f[1]} vs {e[1]}); suggest a human check.",
         )
     return FieldResult(
         field, expected, found, Status.FAIL,
@@ -231,7 +231,7 @@ def check_government_warning(extraction: LabelExtraction) -> FieldResult:
     if not heading_caps:
         if heading_any:
             problems.append(
-                'The "GOVERNMENT WARNING:" heading is not in all capital letters — '
+                'The "GOVERNMENT WARNING:" heading is not in all capital letters; '
                 "it must appear in capitals (found different capitalization)."
             )
         else:
@@ -311,7 +311,7 @@ def verify_label(
     start = time.perf_counter()
     try:
         extraction = provider.extract(image_bytes, media_type, hint)
-    except Exception as exc:  # noqa: BLE001 — surface any provider error to the UI
+    except Exception as exc:  # noqa: BLE001 - surface any provider error to the UI
         return VerificationReport(
             overall=OverallStatus.ERROR,
             elapsed_seconds=time.perf_counter() - start,

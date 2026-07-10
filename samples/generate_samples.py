@@ -91,7 +91,7 @@ def render(
     d.rectangle([15, 15, W - 15, H - 15], outline=RULE, width=3)
     d.rectangle([25, 25, W - 25, H - 25], outline=RULE, width=1)
 
-    _centered(d, 70, "— DISTILLED SPIRITS —", _font(18), fill=RULE)
+    _centered(d, 70, "- DISTILLED SPIRITS -", _font(18), fill=RULE)
     _centered(d, 130, brand, _font(40, bold=True))
     _centered(d, 210, class_type, _font(24))
 
@@ -164,7 +164,7 @@ def main():
         producer="Bottled by Harbor Light Rum Co., Key West, FL",
         warning=None,
     )
-    # "People try to get creative with the warning all the time" — reworded,
+    # "People try to get creative with the warning all the time" - reworded,
     # heading still in caps, so only the wording check should fail.
     altered = GOOD_WARNING.replace(
         "because of the risk of birth defects", "because of the risk of harm to the baby"

@@ -16,7 +16,7 @@ from io import BytesIO
 
 from PIL import Image
 
-# Claude's effective max resolution — larger images are server-downscaled.
+# Claude's effective max resolution - larger images are server-downscaled.
 MAX_EDGE = 1568
 # Stay comfortably under the API's 5 MB image limit.
 MAX_BYTES = 4_500_000
@@ -32,7 +32,7 @@ def prepare_image(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
     try:
         img = Image.open(BytesIO(image_bytes))
         img.load()
-    except Exception:  # noqa: BLE001 — not an image we can parse; send as-is
+    except Exception:  # noqa: BLE001 - not an image we can parse; send as-is
         return image_bytes, media_type
 
     needs_resize = max(img.size) > MAX_EDGE
@@ -50,7 +50,7 @@ def prepare_image(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
     img.save(buf, "JPEG", quality=JPEG_QUALITY)
     out = buf.getvalue()
 
-    # Pathological case: re-encode grew a small file — keep the original.
+    # Pathological case: re-encode grew a small file - keep the original.
     if not needs_resize and len(out) >= len(image_bytes):
         return image_bytes, media_type
     return out, "image/jpeg"

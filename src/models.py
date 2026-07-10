@@ -1,7 +1,7 @@
 """Data models shared across the app.
 
 `LabelExtraction` is a Pydantic model because it is populated from the vision
-model's structured tool output. Everything else is a plain dataclass — these
+model's structured tool output. Everything else is a plain dataclass - these
 are internal value objects, not API payloads.
 """
 from __future__ import annotations
@@ -33,8 +33,8 @@ class OverallStatus(str, Enum):
 class LabelExtraction(BaseModel):
     """What the vision model actually read off the label artwork.
 
-    Fields are verbatim (not normalised) so the verification engine — not the
-    model — owns the pass/fail judgement. `government_warning_text` preserves
+    Fields are verbatim (not normalised) so the verification engine - not the
+    model - owns the pass/fail judgement. `government_warning_text` preserves
     exact capitalisation so we can enforce the all-caps heading rule.
     """
 

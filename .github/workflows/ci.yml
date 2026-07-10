@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Byte-compile everything (catches syntax errors)
+        run: python -m compileall -q app.py src tests samples
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: App smoke test (headless Streamlit AppTest, demo mode)
+        run: |
+          python - <<'PY'
+          from streamlit.testing.v1 import AppTest
+
+          # Boot the whole app headlessly; any exception fails the build.
+          at = AppTest.from_file("app.py", default_timeout=60).run()
+          assert not at.exception, f"app raised on load: {at.exception}"
+
+          # Drive the bundled-samples batch end to end.
+          btn = [b for b in at.button if "bundled samples" in b.label][0]
+          done = btn.click().run()
+          assert not done.exception, f"batch run raised: {done.exception}"
+
+          metrics = {m.label: m.value for m in done.metric}
+          assert metrics.get("Total") == "6", f"unexpected batch metrics: {metrics}"
+          print("smoke test OK:", metrics)
+          PY
